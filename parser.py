@@ -1,6 +1,8 @@
-from scapy.all import Ether, IP, TCP, UDP
+from scapy.all import Ether, IP, IPv6, TCP, UDP, ARP
+from typing import Any
 
 PROTO_MAP = {
+    2: "IGMP",
     6: "TCP",
     17: "UDP"
 }
@@ -8,11 +10,12 @@ PROTO_MAP = {
 PORT_MAP = {
     80: "HTTP",
     443: "HTTPS",
-    53: "DNS"
+    53: "DNS",
+    5353: "mDNS"
 }
 
 def parse_packet(packet):
-    data = {}
+    data:  dict[str, Any] = {}
 
     if Ether in packet:
         eth = packet[Ether]
@@ -20,6 +23,17 @@ def parse_packet(packet):
             "MAC Origen": eth.src,
             "MAC Destino": eth.dst,
             "Tipo": hex(eth.type)
+        }
+
+    # Detectar paquetes ARP (Para los que no tienen capa IP)
+    if ARP in packet:
+        arp = packet[ARP]
+        data["ip"] = {
+            "Origen": arp.psrc,
+            "Destino": arp.pdst
+        }
+        data["transport"] = {
+            "Tipo": "ARP"
         }
 
     if IP in packet:
@@ -32,6 +46,23 @@ def parse_packet(packet):
             "Protocolo": proto,
             "Origen": ip.src,
             "Destino": ip.dst
+        }
+
+        if proto == "IGMP":
+            data["transport"] = {
+                "Tipo": "IGMP"
+            }
+
+    elif IPv6 in packet:
+        ip6 = packet[IPv6]
+        # En IPv6, el campo equivalente a 'proto' se llama 'nh' (Next Header)
+        proto = PROTO_MAP.get(ip6.nh, str(ip6.nh))
+        data["ip"] = {
+            "Versión": ip6.version,
+            "TTL": f"{ip6.hlim} (límite de saltos)",
+            "Protocolo": proto,
+            "Origen": ip6.src,
+            "Destino": ip6.dst
         }
 
     if TCP in packet:
