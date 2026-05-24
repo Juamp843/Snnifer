@@ -16,7 +16,7 @@ class GUI(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Sniffer PRO")
+        self.setWindowTitle("Sniffer")
         self.setGeometry(100, 100, 1200, 700)
 
         self.packets = []
@@ -30,10 +30,12 @@ class GUI(QMainWindow):
         # Filtro
         self.filter = QLineEdit()
         self.filter.setPlaceholderText("Filtrar por IP, TCP, UDP...")
+        self.filter.textChanged.connect(self.apply_filter)
+
 
         # Tabla
         self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["#", "Origen", "Destino", "Proto", "Info"])
+        self.table.setHorizontalHeaderLabels(["#", "Origen", "Destino", "Protocolo", "Información"])
         self.table.cellClicked.connect(self.show_details)
 
         # UX mejora
@@ -159,17 +161,11 @@ class GUI(QMainWindow):
         self.packets.append(parsed)
         self.analyzer.process(parsed)
 
-        # Filtro
-        text_filter = self.filter.text().lower()
-        if text_filter and text_filter not in str(parsed).lower():
-            return
-
         row = self.table.rowCount()
         self.table.insertRow(row)
 
         ip = parsed.get("ip", {})
         tr = parsed.get("transport", {})
-
         proto = tr.get("Tipo", "OTRO")
 
         self.table.setItem(row, 0, QTableWidgetItem(str(row)))
@@ -184,7 +180,42 @@ class GUI(QMainWindow):
         elif proto == "UDP":
             self.table.item(row, 3).setBackground(QColor("#22c55e"))
 
+        # Filtro
+        self.check_row_visibility(row, parsed)
+
         self.update_stats()
+
+
+    # ======= FILTRO ========
+
+    def apply_filter(self):
+        # Se recorre toda la tabla y oculta/muestra filas según el texto introducido
+        for row in range(self.table.rowCount()):
+            parsed_packet = self.packets[row]
+            self.check_row_visibility(row, parsed_packet)
+
+    def check_row_visibility(self, row, parsed_packet):
+        # Se compara de forma limpia si el filtro coincide con Origen, Destino o Protocolo
+        query = self.filter.text().lower().strip()
+
+        if not query:
+            # Si el filtro está vacío, mostramos la fila siempre
+            self.table.setRowHidden(row, False)
+            return
+
+        ip = parsed_packet.get("ip", {})
+        tr = parsed_packet.get("transport", {})
+
+        origen = ip.get("Origen", "-").lower()
+        destino = ip.get("Destino", "-").lower()
+        proto = tr.get("Tipo", "OTRO").lower()
+
+        # Si la búsqueda está incluida en cualquiera de los tres campos visibles importantes
+        if query in origen or query in destino or query in proto:
+            self.table.setRowHidden(row, False)  # Se mantiene visible
+        else:
+            self.table.setRowHidden(row, True)  # Se oculta
+
 
     # ====== DETALLES ======
 
