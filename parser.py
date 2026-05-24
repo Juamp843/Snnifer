@@ -93,3 +93,209 @@ def parse_packet(packet):
         }
 
     return data
+
+
+# ==================== GENERADOR IPV4  ====================
+def generate_ipv4_html(packet):
+    if not packet.haslayer('IP'):
+        return "<p style='color:red;'>Este paquete no contiene una cabecera IPv4 válida.</p>"
+
+    ip = packet['IP']
+    version = ip.version
+    ihl = ip.ihl
+    tos = ip.tos
+    total_len = ip.len
+    pkt_id = ip.id
+    flags_int = int(ip.flags)
+    flags_bin = f"{flags_int:03b}"
+    frag = ip.frag
+    ttl = ip.ttl
+    proto = ip.proto
+    chksum = ip.chksum
+    src = ip.src
+    dst = ip.dst
+
+    proto_name = PROTO_MAP.get(proto, str(proto))
+
+    css = """
+    <style>
+        body { font-family: sans-serif; background-color: #1e1e1e; color: #fff; margin: 5px; padding: 0; }
+        .datagram {
+            display: grid; grid-template-columns: repeat(32, 1fr); gap: 3px;
+            background-color: #191919; padding: 6px; border: 1px solid #333; border-radius: 4px;
+        }
+        .cell {
+            background-color: #2e3440; 
+            border: 1px solid #4c566a; 
+            text-align: center; 
+            font-family: monospace; 
+            font-size: 11px;
+            padding: 10px 2px;
+        }
+        .cell a {
+            color: inherent;
+            text-decoration: none;
+        }
+        .cell a:hover {
+            color: #85a5ff;              
+            text-decoration: underline; 
+        }
+        .header-bit {
+            grid-column: span 32; background-color: #434c5e; font-weight: bold;
+            padding: 4px; text-align: center; font-family: monospace; font-size: 11px; color: #e5e9f0;
+        }
+        .c-ver { background-color: #bf616a; }
+        .c-ihl { background-color: #d08770; }
+        .c-tos { background-color: #ebcb8b; }
+        .c-len { background-color: #a3be8c; }
+        .c-id  { background-color: #b48ead; }
+        .c-flg { background-color: #5e81ac; }
+        .c-frg { background-color: #88c0d0; }
+        .c-ttl { background-color: #4f5b66; }
+        .c-pro { background-color: #ab7967; }
+        .c-chk { background-color: #9a4b4b; color: #fff; }
+        .c-ip  { background-color: #4c566a; grid-column: span 32; font-size: 12px; padding: 16px; }
+    </style>
+    """
+
+    html = f"""
+    {css}
+    <div class="datagram">
+
+        <div class="cell c-ver" style="grid-column: span 4;">
+            <a href="ipv4_version">Ver<br><b>{version}</b></a>
+        </div>
+        <div class="cell c-ihl" style="grid-column: span 4;">
+            <a href="ipv4_ihl">IHL<br><b>{ihl}</b></a>
+        </div>
+        <div class="cell c-tos" style="grid-column: span 8;">
+            <a href="ipv4_tos">ToS<br><b>0x{tos:02x}</b></a>
+        </div>
+        <div class="cell c-len" style="grid-column: span 16;">
+            <a href="ipv4_total_len">Longitud Total<br><b>{total_len} B</b></a>
+        </div>
+
+        <div class="cell c-id" style="grid-column: span 16;">
+            <a href="ipv4_id">Identificación<br><b>0x{pkt_id:04x}</b></a>
+        </div>
+        <div class="cell c-flg" style="grid-column: span 3;">
+            <a href="ipv4_flags">Flags<br><b>{flags_bin}</b></a>
+        </div>
+        <div class="cell c-frg" style="grid-column: span 13;">
+            <a href="ipv4_fragment">Desplazamiento<br><b>{frag}</b></a>
+        </div>
+
+        <div class="cell c-ttl" style="grid-column: span 8;">
+            <a href="ipv4_ttl">TTL<br><b>{ttl}</b></a>
+        </div>
+        <div class="cell c-pro" style="grid-column: span 8;">
+            <a href="ipv4_protocol">Protocolo<br><b>{proto_name}</b></a>
+        </div>
+        <div class="cell c-chk" style="grid-column: span 16;">
+            <a href="ipv4_checksum">Checksum<br><b>0x{chksum:04x}</b></a>
+        </div>
+
+        <div class="header-bit" style="background-color: #3b4252;">Dirección de Origen</div>
+        <div class="cell c-ip">
+            <a href="ipv4_src_ip">IP Origen: <b>{src}</b></a>
+        </div>
+
+        <div class="header-bit" style="background-color: #3b4252;">Dirección de Destino</div>
+        <div class="cell c-ip">
+            <a href="ipv4_dst_ip">IP Destino: <b>{dst}</b></a>
+        </div>
+    </div>
+    """
+    return html
+
+
+# ==================== GENERADOR IPV6 ====================
+def generate_ipv6_html(packet):
+    if not packet.haslayer('IPv6'):
+        return "<p style='color:red;'>Este paquete no contiene una cabecera IPv6 válida.</p>"
+
+    ip6 = packet['IPv6']
+    version = ip6.version
+    tc = ip6.tc
+    fl = ip6.fl
+    plen = ip6.plen
+    nh = ip6.nh
+    hlim = ip6.hlim
+    src = ip6.src
+    dst = ip6.dst
+
+    proto_name = PROTO_MAP.get(nh, str(nh))
+
+    css = """
+    <style>
+        body { font-family: sans-serif; background-color: #1e1e1e; color: #fff; margin: 5px; padding: 0; }
+        .datagram {
+            display: grid; grid-template-columns: repeat(32, 1fr); gap: 3px;
+            background-color: #191919; padding: 6px; border: 1px solid #333; border-radius: 4px;
+        }
+        .cell {
+            background-color: #2e3440; 
+            border: 1px solid #4c566a; 
+            text-align: center; 
+            font-family: monospace; 
+            font-size: 11px;
+            padding: 10px 2px;
+        }
+        .cell a {
+            color: inherent !important;
+            text-decoration: none;
+        }
+        .cell a:hover {
+            color: #85a5ff;              
+            text-decoration: underline; 
+        }
+        .header-bit {
+            grid-column: span 32; background-color: #434c5e; font-weight: bold;
+            padding: 4px; text-align: center; font-family: monospace; font-size: 11px; color: #e5e9f0;
+        }
+        .c-ver { background-color: #bf616a; }
+        .c-tc  { background-color: #ebcb8b; }
+        .c-fl  { background-color: #b48ead; }
+        .plen { background-color: #a3be8c; }
+        .c-nh  { background-color: #ab7967; }
+        .c-hlim { background-color: #4f5b66; }
+        .c-ip6 { background-color: #4c566a; grid-column: span 32; font-size: 11px; padding: 16px; word-break: break-all; }
+    </style>
+    """
+
+    html = f"""
+    {css}
+    <div class="datagram">
+
+        <div class="cell c-ver" style="grid-column: span 4;">
+            <a href="ipv6_version">Ver<br><b>{version}</b></a>
+        </div>
+        <div class="cell c-tc" style="grid-column: span 8;">
+            <a href="ipv6_traffic_class">Traffic Class<br><b>0x{tc:02x}</b></a>
+        </div>
+        <div class="cell c-fl" style="grid-column: span 20;">
+            <a href="ipv6_flow_label">Flow Label<br><b>{fl}</b></a>
+        </div>
+
+        <div class="cell c-plen" style="grid-column: span 16;">
+            <a href="ipv6_payload_len" style="color: #ffffff; text-decoration: none;">Payload Length<br><b>{plen} B</b></a>
+        </div>
+        <div class="cell c-nh" style="grid-column: span 8;">
+            <a href="ipv6_next_header">Next Header<br><b>{proto_name}</b></a>
+        </div>
+        <div class="cell c-hlim" style="grid-column: span 8;">
+            <a href="ipv6_hop_limit">Hop Limit<br><b>{hlim}</b></a>
+        </div>
+
+        <div class="header-bit" style="background-color: #3b4252;">Dirección de Origen (128 bits)</div>
+        <div class="cell c-ip6">
+            <a href="ipv6_src_ip">{src}</a>
+        </div>
+
+        <div class="header-bit" style="background-color: #3b4252;">Dirección de Destino (128 bits)</div>
+        <div class="cell c-ip6">
+            <a href="ipv6_dst_ip">{dst}</a>
+        </div>
+    </div>
+    """
+    return html
