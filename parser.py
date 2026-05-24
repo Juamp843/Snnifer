@@ -40,27 +40,37 @@ def parse_packet(packet):
         ip = packet[IP]
         proto = PROTO_MAP.get(ip.proto, str(ip.proto))
 
+        # --- Extracción de Banderas (Flags) en IPv4 ---
+        # ip.flags en Scapy puede ser un objeto de bits, lo convertimos a entero para formatear
+        flags_int = int(ip.flags)
+        flags_bin = f"{flags_int:03b}"  # Las banderas de IPv4 ocupan 3 bits
+
         data["ip"] = {
-            "Versión": ip.version,
-            "TTL": f"{ip.ttl} (vida restante)",
-            "Protocolo": proto,
+            "Versión": f"{ip.version} (Binario: {ip.version:04b})",  # 4 bits
+            "IHL (Longitud Cabecera)": f"{ip.ihl} (Binario: {ip.ihl:04b})",  # 4 bits
+            "TOS (Tipo de Servicio)": f"{ip.tos} (Binario: {ip.tos:08b})",  # 8 bits
+            "Longitud Total": f"{ip.len} bytes",
+            "Identificación": f"0x{ip.id:04x} ({ip.id})",
+            "Flags": f"0b{flags_bin} (DF={1 if flags_int & 2 else 0}, MF={1 if flags_int & 1 else 0})",
+            "Desplazamiento Fragmento": f"{ip.frag} (Binario: {ip.frag:013b})",  # 13 bits
+            "TTL (Tiempo de Vida)": f"{ip.ttl}",
+            "Protocolo": f"{proto} ({ip.proto})",
+            "Checksum Cabecera": f"0x{ip.chksum:04x}",
             "Origen": ip.src,
             "Destino": ip.dst
         }
 
-        if proto == "IGMP":
-            data["transport"] = {
-                "Tipo": "IGMP"
-            }
-
     elif IPv6 in packet:
         ip6 = packet[IPv6]
-        # En IPv6, el campo equivalente a 'proto' se llama 'nh' (Next Header)
         proto = PROTO_MAP.get(ip6.nh, str(ip6.nh))
+
         data["ip"] = {
-            "Versión": ip6.version,
-            "TTL": f"{ip6.hlim} (límite de saltos)",
-            "Protocolo": proto,
+            "Versión": f"{ip6.version} (Binario: {ip6.version:04b})",  # 4 bits
+            "Clase de Tráfico": f"0x{ip6.tc:02x} (Binario: {ip6.tc:08b})",  # 8 bits
+            "Etiqueta de Flujo": f"{ip6.fl} (Binario: {ip6.fl:020b})",  # 20 bits
+            "Longitud de Carga útil": f"{ip6.plen} bytes",
+            "Siguiente Cabecera (Next Header)": f"{proto} ({ip6.nh})",
+            "Límite de Saltos (Hop Limit)": f"{ip6.hlim}",
             "Origen": ip6.src,
             "Destino": ip6.dst
         }
