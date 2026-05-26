@@ -214,51 +214,51 @@ class GUI(QMainWindow):
             ),
             
             # ---- CAMPOS ARP ----
-"arp_hwtype": (
-    "Hardware Type",
-    "Indica el tipo de red física utilizada. El valor 1 corresponde a Ethernet."
-),
+            "arp_hwtype": (
+                "Hardware Type",
+                "Indica el tipo de red física utilizada. El valor 1 corresponde a Ethernet."
+            ),
 
-"arp_ptype": (
-    "Protocol Type",
-    "Define el protocolo de capa de red que ARP está resolviendo. 0x0800 corresponde a IPv4."
-),
+            "arp_ptype": (
+                "Protocol Type",
+                "Define el protocolo de capa de red que ARP está resolviendo. 0x0800 corresponde a IPv4."
+            ),
 
-"arp_hwlen": (
-    "Hardware Address Length",
-    "Tamaño en bytes de la dirección MAC. En Ethernet normalmente son 6 bytes."
-),
+            "arp_hwlen": (
+                "Hardware Address Length",
+                "Tamaño en bytes de la dirección MAC. En Ethernet normalmente son 6 bytes."
+            ),
 
-"arp_plen": (
-    "Protocol Address Length",
-    "Tamaño en bytes de la dirección IP utilizada. IPv4 usa 4 bytes."
-),
+            "arp_plen": (
+                "Protocol Address Length",
+                "Tamaño en bytes de la dirección IP utilizada. IPv4 usa 4 bytes."
+            ),
 
-"arp_op": (
-    "ARP Operation",
-    "Indica si el paquete es una solicitud ARP (Request) o una respuesta ARP (Reply)."
-),
+            "arp_op": (
+                "ARP Operation",
+                "Indica si el paquete es una solicitud ARP (Request) o una respuesta ARP (Reply)."
+            ),
 
-"arp_hwsrc": (
-    "MAC Origen",
-    "Dirección MAC del dispositivo que envía la solicitud o respuesta ARP."
-),
+            "arp_hwsrc": (
+                "MAC Origen (Sender Hardware Address)",
+                "Dirección MAC del dispositivo que envía la solicitud o respuesta ARP."
+            ),
 
-"arp_psrc": (
-    "IP Origen",
-    "Dirección IP del emisor del paquete ARP."
-),
+            "arp_psrc": (
+                "IP Origen (Sender Protocol Address)",
+                "Dirección IP del emisor del paquete ARP."
+            ),
 
-"arp_hwdst": (
-    "MAC Destino",
-    "Dirección MAC del equipo destino. En solicitudes suele ser 00:00:00:00:00:00."
-),
+            "arp_hwdst": (
+                "MAC Destino (Target Hardware Address)",
+                "Dirección MAC del equipo destino. En solicitudes suele ser 00:00:00:00:00:00."
+            ),
 
-"arp_pdst": (
-    "IP Destino",
-    "Dirección IP cuya MAC se desea conocer."
-),
-        }
+            "arp_pdst": (
+                "IP Destino (Target Protocol Address)",
+                "Dirección IP cuya MAC se desea conocer."
+            ),
+                    }
 
     # ====== LÓGICA CAPTURA ======
 
@@ -422,6 +422,30 @@ class GUI(QMainWindow):
                         valor_dinamico = f"{ip6.src}"
                     elif key == "ipv6_dst_ip":
                         valor_dinamico = f"{ip6.dst}"
+
+
+                elif "arp" in key and self.current_row_packet.haslayer('ARP'):
+                    arp_pkt = self.current_row_packet['ARP']
+                    if key == "arp_hwtype":
+                        valor_dinamico = f"{arp_pkt.hwtype}"
+                    elif key == "arp_ptype":
+                        valor_dinamico = f"0x{arp_pkt.ptype:04x}"
+                    elif key == "arp_hwlen":
+                        valor_dinamico = f"{arp_pkt.hwlen} Bytes"
+                    elif key == "arp_plen":
+                        valor_dinamico = f"{arp_pkt.plen} Bytes"
+                    elif key == "arp_op":
+                        op_names = {1: "1 (who-has / Solicitud)", 2: "2 (is-at / Respuesta)"}
+                        valor_dinamico = op_names.get(arp_pkt.op, f"{arp_pkt.op} (Desconocido)")
+                    elif key == "arp_hwsrc":
+                        valor_dinamico = f"{arp_pkt.hwsrc}"
+                    elif key == "arp_psrc":
+                        valor_dinamico = f"{arp_pkt.psrc}"
+                    elif key == "arp_hwdst":
+                        valor_dinamico = f"{arp_pkt.hwdst}"
+                    elif key == "arp_pdst":
+                        valor_dinamico = f"{arp_pkt.pdst}"
+
             except Exception as e:
                 valor_dinamico = f"Error al leer valor ({str(e)})"
 
@@ -436,6 +460,9 @@ class GUI(QMainWindow):
             if "ipv6" in key:
                 self.inspector_box.setStyleSheet(
                     "QGroupBox { border: 2px solid #b48ead; border-radius: 5px; font-weight: bold; }")
+            elif "arp" in key:
+                self.inspector_box.setStyleSheet(
+                    "QGroupBox { border: 2px solid #ebcb8b; border-radius: 5px; font-weight: bold; }")
             else:
                 self.inspector_box.setStyleSheet(
                     "QGroupBox { border: 2px solid #5e81ac; border-radius: 5px; font-weight: bold; }")

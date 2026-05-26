@@ -9,3 +9,7 @@ venv/
 # Ignorar configuraciones locales
 .vscode/
 .idea/
+
+# Ignorar Compilados
+dist/
+build/
