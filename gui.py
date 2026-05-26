@@ -211,7 +211,53 @@ class GUI(QMainWindow):
             "ipv6_dst_ip": (
                 "Dirección IPv6 de Destino (128 bits)",
                 "Dirección lógica de 128 bits correspondiente a la terminal destino final."
-            )
+            ),
+            
+            # ---- CAMPOS ARP ----
+"arp_hwtype": (
+    "Hardware Type",
+    "Indica el tipo de red física utilizada. El valor 1 corresponde a Ethernet."
+),
+
+"arp_ptype": (
+    "Protocol Type",
+    "Define el protocolo de capa de red que ARP está resolviendo. 0x0800 corresponde a IPv4."
+),
+
+"arp_hwlen": (
+    "Hardware Address Length",
+    "Tamaño en bytes de la dirección MAC. En Ethernet normalmente son 6 bytes."
+),
+
+"arp_plen": (
+    "Protocol Address Length",
+    "Tamaño en bytes de la dirección IP utilizada. IPv4 usa 4 bytes."
+),
+
+"arp_op": (
+    "ARP Operation",
+    "Indica si el paquete es una solicitud ARP (Request) o una respuesta ARP (Reply)."
+),
+
+"arp_hwsrc": (
+    "MAC Origen",
+    "Dirección MAC del dispositivo que envía la solicitud o respuesta ARP."
+),
+
+"arp_psrc": (
+    "IP Origen",
+    "Dirección IP del emisor del paquete ARP."
+),
+
+"arp_hwdst": (
+    "MAC Destino",
+    "Dirección MAC del equipo destino. En solicitudes suele ser 00:00:00:00:00:00."
+),
+
+"arp_pdst": (
+    "IP Destino",
+    "Dirección IP cuya MAC se desea conocer."
+),
         }
 
     # ====== LÓGICA CAPTURA ======
@@ -312,28 +358,8 @@ class GUI(QMainWindow):
             html_content = generate_ipv6_html(packet_crudo)
 
         elif packet_crudo.haslayer('ARP'):
-            arp = packet_crudo['ARP']
-            op_name = "Petición (Request)" if arp.op == 1 else "Respuesta (Reply)" if arp.op == 2 else str(arp.op)
-            html_content = f"""
-            <div style="font-family: sans-serif; color: #fff; background-color: #2e3440; padding: 15px; border: 1px solid #4c566a; border-radius: 5px;">
-                <h3 style="color: #d08770; margin-top: 0;">Análisis de Trama ARP (Address Resolution Protocol)</h3>
-                <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 12px;">
-                    <tr style="background-color: #3b4252;"><td style="padding: 6px;"><b>Operación:</b></td><td style="padding: 6px; color: #ebcb8b;">{op_name}</td></tr>
-                    <tr><td style="padding: 6px;"><b>MAC Emisor:</b></td><td style="padding: 6px;">{arp.hwsrc}</td></tr>
-                    <tr style="background-color: #3b4252;"><td style="padding: 6px;"><b>IP Emisor:</b></td><td style="padding: 6px; color: #a3be8c;">{arp.psrc}</td></tr>
-                    <tr><td style="padding: 6px;"><b>MAC Objetivo:</b></td><td style="padding: 6px;">{arp.hwdst}</td></tr>
-                    <tr style="background-color: #3b4252;"><td style="padding: 6px;"><b>IP Objetivo:</b></td><td style="padding: 6px; color: #88c0d0;">{arp.pdst}</td></tr>
-                </table>
-            </div>
-            """
-        else:
-            html_content = f"""
-            <div style="font-family: sans-serif; color: #fff; background-color: #2e3440; padding: 15px; border-radius: 5px;">
-                <h3>Detalles del Paquete #{row}</h3>
-                <p style="color: #cccccc;">Este paquete utiliza un protocolo no mapeado en el visualizador gráfico.</p>
-                <p>Resumen: <b>{packet_crudo.summary()}</b></p>
-            </div>
-            """
+            from parser import generate_arp_html
+            html_content = generate_arp_html(packet_crudo)
 
         self.detail_viewer.setHtml(html_content)
 

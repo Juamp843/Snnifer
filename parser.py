@@ -299,3 +299,146 @@ def generate_ipv6_html(packet):
     </div>
     """
     return html
+
+# ==================== GENERADOR ARP ====================
+def generate_arp_html(packet):
+    if not packet.haslayer('ARP'):
+        return "<p style='color:red;'>Este paquete no contiene ARP válido.</p>"
+
+    arp = packet['ARP']
+
+    hwtype = arp.hwtype
+    ptype = arp.ptype
+    hwlen = arp.hwlen
+    plen = arp.plen
+    op = arp.op
+
+    op_name = "Request" if op == 1 else "Reply" if op == 2 else str(op)
+
+    css = """
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #1e1e1e;
+            color: #fff;
+            margin: 5px;
+            padding: 0;
+        }
+
+        .datagram {
+            display: grid;
+            grid-template-columns: repeat(32, 1fr);
+            gap: 3px;
+            background-color: #191919;
+            padding: 6px;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+
+        .cell {
+            border: 1px solid #4c566a;
+            text-align: center;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 10px 2px;
+        }
+
+        .cell a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .cell a:hover {
+            color: #88c0d0;
+            text-decoration: underline;
+        }
+
+        .header {
+            grid-column: span 32;
+            background-color: #434c5e;
+            font-weight: bold;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .c1 { background-color: #bf616a; }
+        .c2 { background-color: #d08770; }
+        .c3 { background-color: #ebcb8b; }
+        .c4 { background-color: #a3be8c; }
+        .c5 { background-color: #5e81ac; }
+        .c6 { background-color: #b48ead; }
+        .c7 { background-color: #88c0d0; }
+
+        .full {
+            grid-column: span 32;
+            background-color: #4c566a;
+            padding: 12px;
+            font-size: 12px;
+        }
+    </style>
+    """
+
+    html = f"""
+    {css}
+
+    <div class="datagram">
+
+        <div class="cell c1" style="grid-column: span 8;">
+            <a href="arp_hwtype">
+                Hardware Type<br>
+                <b>{hwtype}</b>
+            </a>
+        </div>
+
+        <div class="cell c2" style="grid-column: span 8;">
+            <a href="arp_ptype">
+                Protocol Type<br>
+                <b>0x{ptype:04x}</b>
+            </a>
+        </div>
+
+        <div class="cell c3" style="grid-column: span 8;">
+            <a href="arp_hwlen">
+                HW Size<br>
+                <b>{hwlen}</b>
+            </a>
+        </div>
+
+        <div class="cell c4" style="grid-column: span 8;">
+            <a href="arp_plen">
+                Proto Size<br>
+                <b>{plen}</b>
+            </a>
+        </div>
+
+        <div class="cell c5" style="grid-column: span 32;">
+            <a href="arp_op">
+                Operación ARP<br>
+                <b>{op} ({op_name})</b>
+            </a>
+        </div>
+
+        <div class="header">MAC Origen</div>
+        <div class="cell full">
+            <a href="arp_hwsrc">{arp.hwsrc}</a>
+        </div>
+
+        <div class="header">IP Origen</div>
+        <div class="cell full">
+            <a href="arp_psrc">{arp.psrc}</a>
+        </div>
+
+        <div class="header">MAC Destino</div>
+        <div class="cell full">
+            <a href="arp_hwdst">{arp.hwdst}</a>
+        </div>
+
+        <div class="header">IP Destino</div>
+        <div class="cell full">
+            <a href="arp_pdst">{arp.pdst}</a>
+        </div>
+
+    </div>
+    """
+
+    return html
